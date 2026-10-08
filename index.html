@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#060818">
+<title>UJIANKU - AI Exam System</title>
+<style>
+:root{--bg:#060818;--g:rgba(20,28,64,.62);--ln:rgba(120,170,255,.2);--c:#22d3ee;--b:#3b82f6;--p:#8b5cf6;--t:#e8eeff;--m:#8fa0cc;--ok:#38bdf8;--no:#f08a9a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--t);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;overflow-x:hidden}
+#sky{position:fixed;inset:0;z-index:0;opacity:.9;transition:opacity .6s}
+body.exam #sky{opacity:.25}
+.grid{position:fixed;inset:auto 0 0 0;height:45vh;z-index:0;background:linear-gradient(var(--ln) 1px,transparent 1px),linear-gradient(90deg,var(--ln) 1px,transparent 1px);background-size:44px 44px;transform:perspective(300px) rotateX(62deg);transform-origin:bottom;mask-image:linear-gradient(transparent,#000);-webkit-mask-image:linear-gradient(transparent,#000);opacity:.5}
+body.exam .grid{opacity:.12}
+#app{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:16px 14px 100px;min-height:100vh}
+.view{display:none;animation:in .45s ease both}.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.card{background:var(--g);border:1px solid var(--ln);border-radius:20px;padding:16px;margin-bottom:14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,20,.45),inset 0 1px 0 rgba(255,255,255,.07);transition:transform .15s ease-out}
+.tilt{transform-style:preserve-3d;will-change:transform}
+h1,h2,h3{margin:0 0 10px}h2{font-size:1.35rem}h3{font-size:1.05rem}
+p{color:var(--m);line-height:1.5;margin:6px 0}small,.sm{color:var(--m);font-size:.8rem}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:1.3rem}
+.logo svg{width:38px;height:38px;animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand{font-size:.72rem;color:var(--m);letter-spacing:.12em;text-align:center;margin-top:18px}
+label{display:block;font-size:.82rem;color:var(--m);margin:12px 0 6px}
+input,select,textarea{width:100%;background:rgba(5,10,35,.7);color:var(--t);border:1px solid var(--ln);border-radius:12px;padding:12px;font:inherit;font-size:1rem;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--c);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+textarea{min-height:130px;resize:vertical}
+.btn{border:0;border-radius:14px;padding:13px 18px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--b),var(--p));box-shadow:0 6px 24px rgba(59,130,246,.4);cursor:pointer;transition:transform .15s,opacity .2s}
+.btn:active{transform:scale(.96)}.btn:disabled{opacity:.45}
+.btn.g{background:rgba(120,170,255,.12);box-shadow:none;border:1px solid var(--ln)}
+.btn.r{background:linear-gradient(135deg,#c2415a,#8b3a8f)}
+.btn.w{width:100%}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:110px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 14px;border-radius:12px;border:1px solid var(--ln);background:rgba(5,10,35,.5);color:var(--t);font:inherit;font-size:.9rem;cursor:pointer;transition:.2s}
+.chip.on{background:linear-gradient(135deg,rgba(59,130,246,.55),rgba(139,92,246,.55));border-color:var(--c);box-shadow:0 0 16px rgba(34,211,238,.35)}
+.seg{display:flex;background:rgba(5,10,35,.6);border-radius:14px;padding:4px;border:1px solid var(--ln)}
+.seg .chip{flex:1;border:0;text-align:center;background:none}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;perspective:800px}
+.stat{padding:14px;border-radius:18px;background:linear-gradient(145deg,rgba(59,130,246,.22),rgba(139,92,246,.14));border:1px solid var(--ln)}
+.stat b{display:block;font-size:1.7rem;color:var(--c);text-shadow:0 0 18px rgba(34,211,238,.5);margin-top:4px;word-break:break-word}
+.hero{text-align:center;padding:22px 10px;perspective:700px}
+.planet{width:110px;height:110px;margin:0 auto 12px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#7dd3fc,#3b82f6 45%,#4c1d95 80%);box-shadow:0 0 40px rgba(59,130,246,.6),inset -14px -10px 26px rgba(0,0,30,.6);position:relative;animation:float 5s ease-in-out infinite}
+.planet:after{content:"";position:absolute;left:-40%;right:-40%;top:42%;height:16%;border:2px solid rgba(34,211,238,.7);border-radius:50%;transform:rotateX(70deg) rotateZ(-14deg);box-shadow:0 0 14px var(--c)}
+@keyframes float{50%{transform:translateY(-10px) rotateY(12deg)}}
+.user{display:flex;align-items:center;gap:12px}
+.user img{width:54px;height:54px;border-radius:50%;border:2px solid var(--c);object-fit:cover;background:#123}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:none;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:rgba(6,8,24,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--ln)}
+nav.on{display:flex}
+nav button{background:none;border:0;color:var(--m);font:inherit;font-size:.72rem;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 14px;cursor:pointer}
+nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--c)}
+.bar{height:8px;border-radius:9px;background:rgba(120,170,255,.15);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c),var(--p));width:0;transition:width .4s}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;margin:9px 0;padding:13px;border-radius:14px;background:rgba(5,10,35,.55);border:1px solid var(--ln);color:var(--t);font:inherit;cursor:pointer;transition:.2s}
+.opt b{min-width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(120,170,255,.15);font-size:.85rem}
+.opt.on{border-color:var(--c);background:rgba(34,211,238,.12);transform:scale(1.015);box-shadow:0 0 18px rgba(34,211,238,.25)}
+.opt.on b{background:var(--c);color:#031}
+.opt.ok{border-color:var(--ok);background:rgba(56,189,248,.12)}.opt.no{border-color:var(--no);background:rgba(240,138,154,.12)}
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:7px}
+.nums button{height:40px;border-radius:10px;border:1px solid var(--ln);background:rgba(5,10,35,.5);color:var(--m);font:inherit;cursor:pointer}
+.nums .d{background:rgba(59,130,246,.4);color:#fff}.nums .c{border-color:var(--c);box-shadow:0 0 10px var(--c);color:#fff}
+.tmr{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.2rem;color:var(--c)}
+.scorebox{text-align:center;padding:22px 10px;perspective:800px}
+.ring{width:170px;height:170px;margin:0 auto;position:relative;transform:rotateX(12deg) rotateY(-10deg);filter:drop-shadow(0 14px 22px rgba(34,211,238,.35))}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring div{position:absolute;inset:0;display:grid;place-items:center;font-size:2.8rem;font-weight:800}
+.badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:.78rem;font-weight:700}
+.badge.ok{background:rgba(56,189,248,.18);color:var(--ok)}.badge.no{background:rgba(240,138,154,.18);color:var(--no)}.badge.n{background:rgba(143,160,204,.18);color:var(--m)}
+.rev{border-left:3px solid var(--ln);padding-left:12px}.rev.ok{border-color:var(--ok)}.rev.no{border-color:var(--no)}
+.hi{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+.hi .sc{font-size:1.6rem;font-weight:800;color:var(--c)}
+#toasts{position:fixed;top:12px;left:0;right:0;z-index:100;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;max-width:92vw;padding:12px 16px;border-radius:14px;background:rgba(14,22,56,.95);border:1px solid var(--c);box-shadow:0 8px 30px rgba(0,0,0,.5);animation:in .3s both;font-size:.9rem}
+.toast.e{border-color:var(--no)}
+#modal{position:fixed;inset:0;z-index:90;display:none;align-items:flex-end;justify-content:center;background:rgba(2,4,16,.7);backdrop-filter:blur(5px)}
+#modal.on{display:flex}
+#modal>div{width:100%;max-width:520px;max-height:85vh;overflow:auto;background:#0c1334;border:1px solid var(--ln);border-radius:24px 24px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:up .3s both}
+@media(min-width:600px){#modal{align-items:center}#modal>div{border-radius:24px}}
+@keyframes up{from{transform:translateY(60px);opacity:0}}
+.orbit{width:150px;height:150px;margin:20px auto;position:relative}
+.orbit .core{position:absolute;inset:50px;border-radius:50%;background:radial-gradient(circle,#fff,var(--c) 40%,var(--p));box-shadow:0 0 40px var(--c);animation:pulse 1.6s infinite}
+.orbit i{position:absolute;inset:0;border:1.5px solid rgba(34,211,238,.5);border-radius:50%;animation:spin 3s linear infinite}
+.orbit i:nth-child(2){inset:14px;animation-duration:5s;animation-direction:reverse;border-color:rgba(139,92,246,.6)}
+.orbit i:before{content:"";position:absolute;top:-5px;left:50%;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c)}
+@keyframes pulse{50%{transform:scale(.8);opacity:.8}}
+.acc{display:none}.acc.on{display:block}
+ol{color:var(--m);padding-left:20px;line-height:1.7;font-size:.9rem}
+.center{text-align:center}
+.full{position:fixed;inset:0;z-index:80;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+.full.on{display:flex}
+.dots:after{content:"";animation:dt 1.2s steps(4) infinite}
+@keyframes dt{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas><div class="grid"></div>
+<div id="toasts"></div><div id="modal"><div id="mbox"></div></div>
+
+<div class="full on" id="splash">
+  <div class="planet"></div>
+  <div class="logo" style="font-size:2rem">UJIANKU</div>
+  <p>AI Powered Exam Platform</p><p class="dots">Persiapan UJIANKU</p>
+  <div class="brand">deshbanaaa program</div>
+</div>
+
+<div id="app">
+  <section class="view" id="v-login">
+    <div class="card hero tilt"><div class="planet"></div>
+      <div class="logo" style="justify-content:center"><svg viewBox="0 0 40 40" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="20" cy="20" r="6" fill="#3b82f6"/><ellipse cx="20" cy="20" rx="17" ry="7" transform="rotate(-25 20 20)"/><circle cx="35" cy="14" r="2.5" fill="#8b5cf6"/></svg>UJIANKU</div>
+      <p>AI Powered Exam Platform</p>
+      <p>Buat soal ujian otomatis dengan bantuan Artificial Intelligence.</p>
+      <button class="btn w" id="btnLogin" style="margin-top:14px">Continue with Google</button>
+    </div>
+    <div class="brand">deshbanaaa program</div>
+  </section>
+  <section class="view" id="v-home"></section>
+  <section class="view" id="v-setup"></section>
+  <section class="view" id="v-hist"></section>
+  <section class="view" id="v-prof"></section>
+  <section class="view" id="v-ai"></section>
+  <section class="view" id="v-load"></section>
+  <section class="view" id="v-exam"></section>
+  <section class="view" id="v-res"></section>
+</div>
+
+<nav id="nav"></nav>
+
+<script type="module">
+// ======================
+// CONFIG
+// ======================
+// FIREBASE CONFIG
+// Agar login Google jalan, tambahkan domain deploy di:
+// Firebase Console > Authentication > Settings > Authorized Domains
+// contoh: namaproject.netlify.app atau username.github.io
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const firebaseConfig={apiKey:"AIzaSyAtVdfo3c1I703Y5mx43GCk2_t7wxwEaZw",authDomain:"ujianku-ujianmu.firebaseapp.com",projectId:"ujianku-ujianmu",storageBucket:"ujianku-ujianmu.firebasestorage.app",messagingSenderId:"347581828670",appId:"1:347581828670:web:1f7adc1d9d7687b4ba8b6f",measurementId:"G-06M0STHRRJ"};
+
+// GEMINI MODEL (urut dari yang dicoba pertama; ganti sesuai model yang tersedia)
+const MODEL_CANDIDATES=["gemini-2.5-flash","gemini-2.0-flash","gemini-flash-latest"];
+const GEMINI_URL=m=>`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`;
+
+// APP SETTINGS
+const MAX_Q=50, MIN_PER_MC=1.5, MIN_PER_ESSAY=4, ESSAY_MAX=10;
+const KEY_API="uj_gemini_key";
+
+const JENJANG={SD:[1,6],MI:[1,6],SMP:[7,9],MTs:[7,9],SMA:[10,12],MA:[10,12],MAN:[10,12],SMK:[10,12]};
+const UMUM=["Matematika","Bahasa Indonesia","Bahasa Inggris","Informatika","PJOK","Seni Budaya","Pendidikan Pancasila"];
+const AGAMA=["Al-Qur'an Hadis","Akidah Akhlak","Fikih","SKI","Bahasa Arab"];
+const SMA_L=["Matematika Tingkat Lanjut","Biologi","Fisika","Kimia","Ekonomi","Geografi","Sosiologi","Sejarah","Pendidikan Agama"];
+const MAPEL={
+ SD:["Bahasa Indonesia","Matematika","IPAS","Pendidikan Pancasila","Bahasa Inggris","Pendidikan Agama Islam","PJOK","Seni Budaya","Informatika","Bahasa Daerah"],
+ SMP:["Matematika","Bahasa Indonesia","Bahasa Inggris","IPA","IPS","Pendidikan Pancasila / PPKn","Informatika","PJOK","Seni Budaya","Prakarya","Pendidikan Agama Islam","Bahasa Daerah"],
+ SMA:[...UMUM,...SMA_L],
+ SMK:[...UMUM,"Dasar-Dasar PPLG","Pemrograman","Sistem Komputer","Jaringan Komputer","Basis Data","Pemrograman Web","Desain Grafis","Projek Kreatif dan Kewirausahaan"]
+};
+MAPEL.MI=[...MAPEL.SD,...AGAMA.slice(0,4),"Bahasa Arab"];
+MAPEL.MTs=[...MAPEL.SMP,...AGAMA];
+MAPEL.MA=MAPEL.MAN=[...UMUM,...SMA_L,...AGAMA];
+MAPEL.SMA=[...UMUM,...SMA_L];
+
+// ======================
+// STATE
+// ======================
+const $=s=>document.querySelector(s);
+const S={user:null,exam:null,ans:[],cur:0,end:0,total:0,timer:null,cfg:{nama:"",jenjang:"SMP",kelas:7,mapel:"Matematika",custom:"",sem:1,tipe:"pg",nPG:20,nEs:5},cancel:false};
+const e=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ls={get:k=>{try{return localStorage.getItem(k)}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}},del:k=>{try{localStorage.removeItem(k)}catch{}}};
+
+// ======================
+// FIREBASE AUTH
+// ======================
+let auth;
+function authErr(c){const m={"auth/popup-closed-by-user":"Jendela login ditutup sebelum selesai. Coba lagi.","auth/unauthorized-domain":"Domain website ini belum diizinkan. Tambahkan di Firebase Console > Authentication > Settings > Authorized Domains.","auth/network-request-failed":"Periksa koneksi internet kamu.","auth/cancelled-popup-request":"Permintaan login dibatalkan. Coba lagi.","auth/operation-not-allowed":"Login Google belum diaktifkan di Firebase Console."};return m[c]||"Login gagal ("+(c||"tidak diketahui")+"). Coba lagi.";}
+async function initAuth(){
+  try{
+    auth=getAuth(initializeApp(firebaseConfig));
+    await setPersistence(auth,browserLocalPersistence);
+    getRedirectResult(auth).catch(x=>toast(authErr(x.code),1));
+  }catch(x){toast("Firebase gagal dimuat. Periksa internet.",1);show("login");return;}
+  onAuthStateChanged(auth,u=>{S.user=u;$("#splash").classList.remove("on");if(u){S.cfg.nama=S.cfg.nama||u.displayName||"";if(!$("#v-load.on,#v-exam.on,#v-res.on"))go("home");}else{nav(false);show("login");}});
+}
+async function login(){
+  const p=new GoogleAuthProvider();$("#btnLogin").disabled=true;
+  try{await signInWithPopup(auth,p);}
+  catch(x){
+    if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment"].includes(x.code)){try{await signInWithRedirect(auth,p);return;}catch(y){x=y}}
+    toast(authErr(x.code),1);
+  }
+  $("#btnLogin").disabled=false;
+}
+function logout(){confirmBox("Keluar?","Kamu akan keluar dari akun Google.","Keluar",async()=>{await signOut(auth);toast("Berhasil keluar.");});}
+
+// ======================
+// GEMINI API
+// ======================
+const getKey=()=>S.key||ls.get(KEY_API)||"";
+const maskKey=k=>k.length>8?k.slice(0,4)+"••••••••••••••"+k.slice(-3):"••••••••";
+function httpMsg(s){
+  if(s===400)return"API Gemini menolak permintaan. Periksa kembali API Key atau coba beberapa saat lagi.";
+  if(s===401||s===403)return"API Key tidak valid atau tidak punya izin. Periksa kembali API Key kamu.";
+  if(s===404)return"Model Gemini tidak ditemukan.";
+  if(s===429)return"Batas permintaan API sedang tercapai. Coba lagi nanti.";
+  if(s>=500)return"Server Gemini sedang bermasalah. Coba lagi beberapa saat.";
+  return"Terjadi kesalahan API (HTTP "+s+").";
+}
+async function gemini(prompt){
+  const key=getKey();
+  if(!key)throw new Error("Tambahkan Gemini API Key untuk membuat ujian.");
+  if(!navigator.onLine)throw new Error("Periksa koneksi internet kamu.");
+  let last;
+  for(const m of MODEL_CANDIDATES){
+    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),90000);
+    try{
+      const r=await fetch(GEMINI_URL(m),{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","x-goog-api-key":key},
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.7,responseMimeType:"application/json"}})});
+      clearTimeout(to);
+      if(r.status===404){last=new Error(httpMsg(404));continue;} // model tidak ada -> coba kandidat berikutnya
+      if(!r.ok)throw new Error(httpMsg(r.status));
+      const d=await r.json();
+      const t=d?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("");
+      if(!t)throw new Error("Gemini tidak memberikan jawaban. Coba lagi.");
+      return t;
+    }catch(x){
+      clearTimeout(to);
+      if(x.name==="AbortError")throw new Error("Gemini tidak merespons. Coba lagi.");
+      if(x instanceof TypeError)throw new Error("Periksa koneksi internet kamu.");
+      throw x;
+    }
+  }
+  throw last||new Error("Tidak ada model Gemini yang tersedia.");
+}
+function parseJSON(t){
+  t=t.replace(/```json|```/gi,"").trim();
+  const a=t.search(/[\[{]/),b=Math.max(t.lastIndexOf("}"),t.lastIndexOf("]"));
+  if(a>=0&&b>a)t=t.slice(a,b+1);
+  try{return JSON.parse(t)}catch{}
+  return JSON.parse(t.replace(/,\s*([}\]])/g,"$1").replace(/[\u0000-\u001f]+/g," ")); // repair sederhana
+}
+
+// ======================
+// EXAM GENERATOR
+// ======================
+function curMapel(){const c=S.cfg;return c.mapel==="__custom"?c.custom.trim():c.mapel;}
+function counts(){const c=S.cfg;return c.tipe==="pg"?{pg:30,es:0}:c.tipe==="es"?{pg:0,es:10}:{pg:+c.nPG||0,es:+c.nEs||0};}
+async function generateExam(){
+  const c=S.cfg,n=counts();
+  const prompt=`Kamu adalah guru profesional Indonesia. Buat soal ujian dalam Bahasa Indonesia.
+Jenjang: ${c.jenjang}. Kelas: ${c.kelas}. Mata pelajaran: ${curMapel()}. Semester: ${c.sem}.
+Ikuti Kurikulum Merdeka/kurikulum nasional yang sesuai untuk kelas dan semester tersebut. Tingkat kesulitan sedang, sesuai usia siswa, tidak terlalu mudah dan tidak terlalu sulit. Soal harus beragam, jelas, tidak ambigu, dan hanya satu jawaban benar.
+Jumlah: ${n.pg} soal pilihan ganda (4 opsi) dan ${n.es} soal uraian. Urutkan pilihan ganda dahulu, lalu uraian.
+Balas HANYA JSON valid tanpa markdown dengan format:
+{"title":"Ujian ...","questions":[{"type":"multiple_choice","question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."},{"type":"essay","question":"...","referenceAnswer":"...","explanation":"..."}]}
+correctAnswer adalah index 0-3 (0=A,1=B,2=C,3=D). Isi options tanpa awalan "A." atau "B.".`;
+  let err;
+  for(let i=0;i<2;i++){
+    if(S.cancel)throw new Error("cancel");
+    const t=await gemini(prompt);
+    try{
+      const d=parseJSON(t);
+      const q=(d.questions||[]).filter(x=>x&&x.question&&(x.type==="essay"||(Array.isArray(x.options)&&x.options.length>=4&&Number.isInteger(+x.correctAnswer))));
+      if(q.length<Math.min(3,n.pg+n.es))throw new Error("kurang");
+      return {title:d.title||"Ujian "+curMapel(),questions:q.slice(0,n.pg+n.es)};
+    }catch(x){err=x;}
+  }
+  throw new Error("Format soal dari AI rusak dan tidak dapat dibaca. Coba buat ulang ujian.");
+}
+async function startExam(){
+  const c=S.cfg,n=counts();
+  if(!c.nama.trim())return toast("Isi nama peserta dulu.",1);
+  if(!curMapel())return toast("Isi nama mata pelajaran.",1);
+  if(n.pg+n.es<1)return toast("Jumlah soal minimal 1.",1);
+  if(n.pg+n.es>MAX_Q)return toast("Maksimal "+MAX_Q+" soal per ujian.",1);
+  if(!getKey()){modal(`<h2>Gemini API Key belum dimasukkan.</h2><p>Tambahkan Gemini API Key untuk membuat ujian.</p><div class="row"><button class="btn g" onclick="closeModal()">Batal</button><button class="btn" id="toai">Ke AI Configuration</button></div>`);$("#toai").onclick=()=>{closeModal();go("ai");};return;}
+  if(!navigator.onLine)return toast("Periksa koneksi internet kamu.",1);
+  S.cancel=false;loadView();
+  try{
+    S.exam=await generateExam();
+    S.ans=S.exam.questions.map(()=>null);S.cur=0;
+    S.total=Math.round((n.pg*MIN_PER_MC+n.es*MIN_PER_ESSAY)*60);S.end=Date.now()+S.total*1000;
+    toast("Ujian berhasil dibuat");document.body.classList.add("exam");go("exam");tick();S.timer=setInterval(tick,1000);
+  }catch(x){if(x.message==="cancel")return;failView(x.message);}
+}
+
+// ======================
+// EXAM ENGINE
+// ======================
+const L=i=>"ABCD"[i];
+function renderExam(){
+  const q=S.exam.questions[S.cur],c=S.cfg,N=S.exam.questions.length,a=S.ans[S.cur];
+  $("#v-exam").innerHTML=`<div class="card"><div class="row" style="align-items:center"><div><b>${e(c.nama)}</b><br><small>${e(curMapel())} • Kelas ${c.kelas} • Smt ${c.sem} • ${N} soal</small></div><div class="tmr" style="text-align:right;flex:0 0 auto" id="tm">--:--:--</div></div>
+  <div class="bar" style="margin-top:10px"><i id="tb" style="background:linear-gradient(90deg,var(--p),var(--b))"></i></div></div>
+  <div class="card"><div class="row" style="justify-content:space-between"><b>Soal ${S.cur+1} dari ${N}</b><small>${q.type==="essay"?"Uraian":"Pilihan Ganda"}</small></div>
+  <div class="bar" style="margin:8px 0 14px"><i style="width:${(S.cur+1)/N*100}%"></i></div>
+  <h3 style="line-height:1.5;font-weight:600">${e(q.question)}</h3>
+  ${q.type==="essay"?`<textarea id="es" placeholder="Tulis jawabanmu di sini...">${e(a||"")}</textarea>`:q.options.slice(0,4).map((o,i)=>`<button class="opt ${a===i?"on":""}" data-o="${i}"><b>${L(i)}</b><span>${e(o)}</span></button>`).join("")}
+  <div class="row" style="margin-top:14px"><button class="btn g" id="pv" ${S.cur?"":"disabled"}>Sebelumnya</button><button class="btn" id="nx" ${S.cur<N-1?"":"disabled"}>Berikutnya</button></div></div>
+  <div class="card"><div class="nums">${S.ans.map((x,i)=>`<button data-n="${i}" class="${i===S.cur?"c":x!==null&&x!==""?"d":""}">${i+1}</button>`).join("")}</div>
+  <small>Biru terisi = sudah dijawab • Bergaris = sedang dibuka</small>
+  <button class="btn r w" id="fin" style="margin-top:12px">Selesaikan Ujian</button></div>`;
+  tick();
+}
+function tick(){
+  const left=Math.max(0,Math.round((S.end-Date.now())/1000)),f=n=>String(n).padStart(2,"0");
+  const t=$("#tm");if(t)t.textContent=`${f(left/3600|0)}:${f(left%3600/60|0)}:${f(left%60)}`;
+  const b=$("#tb");if(b)b.style.width=(left/S.total*100)+"%";
+  if(left<=0&&S.timer){toast("Waktu habis. Ujian diselesaikan otomatis.");finish();}
+}
+function saveEssay(){const t=$("#es");if(t)S.ans[S.cur]=t.value.trim()||null;}
+function answered(){return S.ans.filter(x=>x!==null&&x!=="").length;}
+function askFinish(){
+  saveEssay();const N=S.ans.length,d=answered();
+  modal(`<h2>Selesaikan Ujian?</h2><p>Total soal: <b>${N}</b><br>Sudah dijawab: <b>${d}</b><br>Belum dijawab: <b>${N-d}</b></p><div class="row"><button class="btn g" onclick="closeModal()">Kembali</button><button class="btn" id="yes">Ya, Selesaikan</button></div>`);
+  $("#yes").onclick=()=>{closeModal();finish();};
+}
+
+// ======================
+// SCORING
+// ======================
+const status=s=>s>=85?"Sangat Baik":s>=70?"Baik":s>=55?"Cukup":"Perlu Belajar Lagi";
+async function gradeEssays(items){ // items: [{i,question,answer,ref}]
+  const p=`Kamu guru yang menilai secara objektif dan adil. Nilai setiap jawaban siswa berdasarkan kebenaran dan kelengkapan dibanding jawaban acuan. Skor 0-${ESSAY_MAX}.
+Data: ${JSON.stringify(items.map(x=>({id:x.i,pertanyaan:x.question,jawaban_siswa:x.answer,jawaban_acuan:x.ref})))}
+Balas HANYA JSON array: [{"id":0,"score":8,"maxScore":${ESSAY_MAX},"feedback":"umpan balik singkat Bahasa Indonesia"}]`;
+  const r=parseJSON(await gemini(p));
+  return Array.isArray(r)?r:(r.results||r.grades||[]);
+}
+async function finish(){
+  clearInterval(S.timer);S.timer=null;saveEssay();document.body.classList.remove("exam");
+  const qs=S.exam.questions;let ok=0,bad=0,skip=0,mcN=0,esN=0;
+  const items=qs.map((q,i)=>{const a=S.ans[i];
+    if(q.type==="essay"){esN++;return{type:"essay",question:q.question,user:a,ref:q.referenceAnswer,exp:q.explanation,score:null,max:ESSAY_MAX,fb:null};}
+    mcN++;const c=+q.correctAnswer;let st="skip";
+    if(a===null)skip++;else if(a===c){ok++;st="ok";}else{bad++;st="no";}
+    return{type:"mc",question:q.question,options:q.options.slice(0,4),user:a,correct:c,st,exp:q.explanation};});
+  let esScore=null,graded=false,esNote="";
+  if(esN){
+    loadView("AI sedang menilai jawaban uraian...");
+    const todo=items.map((x,i)=>({x,i})).filter(o=>o.x.type==="essay");
+    todo.filter(o=>!o.x.user).forEach(o=>{o.x.score=0;o.x.fb="Tidak dijawab.";});
+    const toGrade=todo.filter(o=>o.x.user).map(o=>({i:o.i,question:o.x.question,answer:o.x.user,ref:o.x.ref}));
+    try{
+      if(toGrade.length){const r=await gradeEssays(toGrade);
+        toGrade.forEach(g=>{const m=r.find(z=>+z.id===g.i);if(m){const mx=+m.maxScore||ESSAY_MAX;items[g.i].score=Math.min(mx,Math.max(0,+m.score||0))*ESSAY_MAX/mx;items[g.i].fb=m.feedback||"";}});}
+      graded=items.filter(x=>x.type==="essay").every(x=>x.score!==null);
+    }catch(x){graded=false;}
+    if(graded)esScore=items.filter(x=>x.type==="essay").reduce((s,x)=>s+x.score,0)/(esN*ESSAY_MAX)*100;
+    else esNote="Jawaban uraian belum dapat dinilai";
+  }
+  const mcScore=mcN?ok/mcN*100:null;
+  let final;
+  if(mcN&&esN&&esScore!==null)final=(mcScore*mcN+esScore*esN)/(mcN+esN);
+  else if(mcN&&esN)final=mcScore; // uraian belum dinilai: tidak dibuat nilai palsu
+  else final=mcN?mcScore:esScore;
+  const res={id:Date.now(),date:new Date().toISOString(),nama:S.cfg.nama,jenjang:S.cfg.jenjang,kelas:S.cfg.kelas,mapel:curMapel(),sem:S.cfg.sem,
+    jenis:mcN&&esN?"Campuran":mcN?"Pilihan Ganda":"Uraian",title:S.exam.title,score:final===null?null:Math.round(final*10)/10,mcScore,esScore,ok,bad,skip,mcN,esN,esNote,items};
+  saveHist(res);S.ans=[];openResult(res);
+}
+
+// ======================
+// HISTORY
+// ======================
+const hk=()=>"uj_hist_"+(S.user?.uid||"guest");
+const getHist=()=>{try{return JSON.parse(ls.get(hk())||"[]")}catch{return[]}};
+function saveHist(r){const h=getHist();h.unshift(r);ls.set(hk(),JSON.stringify(h.slice(0,60)));}
+function clearHist(){confirmBox("Hapus Riwayat?","Semua riwayat ujian di perangkat ini akan dihapus.","Hapus",()=>{ls.del(hk());toast("Riwayat dihapus.");go(curView==="prof"?"prof":"hist");});}
+const fmtD=d=>new Date(d).toLocaleString("id-ID",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+function renderHist(){
+  const h=getHist();
+  $("#v-hist").innerHTML=`<h2>Riwayat</h2>`+(h.length?h.map((r,i)=>`<div class="card hi" data-h="${i}"><div><b>${e(r.mapel)}</b><br><small>${fmtD(r.date)} • ${e(r.jenjang)} Kelas ${r.kelas} • Smt ${r.sem}<br>${e(r.nama)} • ${e(r.jenis)}</small></div><div class="sc">${r.score??"-"}</div></div>`).join("")+`<button class="btn r w" id="hc">Hapus Riwayat</button>`:`<div class="card center"><p>Belum ada riwayat ujian.</p><button class="btn" data-go="setup">Buat Ujian</button></div>`);
+}
+
+// ======================
+// UI
+// ======================
+let curView="login";
+const ICON={home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',setup:'<path d="M9 3h6l1 2h3v16H5V5h3zM9 12l2 2 4-4"/>',hist:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>'};
+const NAVS=[["home","Home"],["setup","Ujian"],["hist","Riwayat"],["prof","Profil"]];
+function nav(on,act){const n=$("#nav");n.classList.toggle("on",!!on);n.innerHTML=NAVS.map(([k,t])=>`<button data-go="${k}" class="${k===act?"on":""}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${t}</button>`).join("");}
+function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));$("#v-"+v).classList.add("on");curView=v;scrollTo(0,0);}
+function go(v){
+  if(!S.user&&v!=="login")return show("login");
+  if(v==="home")renderHome();if(v==="setup")renderSetup();if(v==="hist")renderHist();if(v==="prof")renderProf();if(v==="exam")renderExam();if(v==="ai")renderAI();
+  show(v);nav(["home","setup","hist","prof","ai"].includes(v),v==="ai"?"setup":v);
+}
+function toast(m,err){const t=document.createElement("div");t.className="toast"+(err?" e":"");t.textContent=m;$("#toasts").appendChild(t);setTimeout(()=>t.remove(),3800);}
+function modal(h){$("#mbox").innerHTML=h;$("#modal").classList.add("on");}
+window.closeModal=()=>$("#modal").classList.remove("on");
+function confirmBox(t,d,yes,fn){modal(`<h2>${e(t)}</h2><p>${e(d)}</p><div class="row"><button class="btn g" onclick="closeModal()">Batal</button><button class="btn r" id="cy">${e(yes)}</button></div>`);$("#cy").onclick=()=>{closeModal();fn();};}
+$("#modal").addEventListener("click",x=>{if(x.target.id==="modal")closeModal();});
+
+function renderHome(){
+  const h=getHist(),sc=h.map(x=>x.score).filter(x=>x!==null),avg=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):"-",mx=sc.length?Math.max(...sc):"-";
+  const u=S.user;
+  $("#v-home").innerHTML=`<div class="card hero tilt"><div class="planet"></div><div class="logo" style="justify-content:center">UJIANKU</div><p>AI Powered Exam Platform</p><div class="user" style="justify-content:center;margin:6px 0"><img src="${e(u?.photoURL||"")}" referrerpolicy="no-referrer" alt=""><div style="text-align:left"><small>Selamat datang,</small><h2 style="margin:0">${e(u?.displayName||"Peserta")}</h2></div></div><button class="btn w" data-go="setup">Buat Ujian Baru</button></div>
+  <div class="stats"><div class="stat tilt">Total Ujian<b>${h.length}</b></div><div class="stat tilt">Rata-rata Nilai<b>${avg}</b></div><div class="stat tilt">Nilai Tertinggi<b>${mx}</b></div><div class="stat tilt">Ujian Terakhir<b style="font-size:1rem">${h[0]?e(h[0].mapel)+"<br>"+(h[0].score??"-"):"-"}</b></div></div>
+  ${getKey()?"":`<div class="card" style="margin-top:14px"><p>Tambahkan Gemini API Key untuk membuat ujian.</p><button class="btn g" data-go="ai">Atur API Key</button></div>`}
+  <div class="brand">deshbanaaa program</div>`;
+}
+function renderProf(){
+  const u=S.user,k=getKey();
+  $("#v-prof").innerHTML=`<div class="card user"><img src="${e(u?.photoURL||"")}" referrerpolicy="no-referrer" alt=""><div><b>${e(u?.displayName||"-")}</b><br><small>${e(u?.email||"")}</small></div></div>
+  <div class="card"><p>Gemini API: ${k?maskKey(k):"belum disimpan"}</p><button class="btn w" data-go="ai" style="margin-bottom:10px">AI Configuration</button><button class="btn g w" id="pk" ${k?"":"disabled"}>Hapus Gemini API dari perangkat</button></div>
+  <div class="card"><button class="btn g w" id="hc">Bersihkan riwayat</button></div>
+  <button class="btn r w" id="lo">Keluar</button><div class="brand">deshbanaaa program</div>`;
+}
+const chips=(arr,cur,k)=>arr.map(x=>`<button class="chip ${String(x)===String(cur)?"on":""}" data-${k}="${e(x)}">${e(x)}</button>`).join("");
+function renderAI(){
+  const k=getKey(),sv=!!ls.get(KEY_API);
+  $("#v-ai").innerHTML=`<div class="card"><h2>AI Configuration</h2>
+  <label>Gemini API Key</label><div class="row" style="flex-wrap:nowrap"><input id="ak" type="password" placeholder="${k?maskKey(k):"Tempel API Key"}" autocomplete="off"><button class="btn g" id="ey" style="flex:0 0 auto;min-width:0">Show</button></div>
+  <label style="display:flex;gap:8px;align-items:center"><input id="sv" type="checkbox" style="width:auto" ${sv||!k?"checked":""}> Simpan API key di perangkat ini</label>
+  <div class="row"><button class="btn" id="sk">Simpan API Key</button><button class="btn g" id="dk" ${k?"":"disabled"}>Hapus API Key</button></div>
+  <p class="sm">${k?"Aktif: "+maskKey(k)+". ":""}API key disimpan pada perangkat ini. Jangan gunakan cara ini untuk aplikasi publik berskala besar.</p></div>
+  <div class="card"><button class="btn g w" id="tg">Cara mendapatkan Gemini API Key</button><div class="acc" id="ac" style="margin-top:10px"><ol><li>Buka Google AI Studio.</li><li>Login dengan akun Google.</li><li>Buka halaman API Keys.</li><li>Buat API key.</li><li>Salin API key.</li><li>Masukkan ke UJIANKU.</li><li>Tekan Simpan API Key.</li></ol>
+  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener"><button class="btn w" type="button">Buka Google AI Studio</button></a>
+  <small>Kuota, model, rate limit, dan ketersediaan layanan gratis dapat berubah sesuai kebijakan Google.</small></div></div>
+  <div class="brand">deshbanaaa program</div>`;
+}
+function renderSetup(){
+  const c=S.cfg,[a,b]=JENJANG[c.jenjang],kelas=[];for(let i=a;i<=b;i++)kelas.push(i);
+  if(c.kelas<a||c.kelas>b)c.kelas=a;
+  const mp=MAPEL[c.jenjang];if(c.mapel!=="__custom"&&!mp.includes(c.mapel))c.mapel=mp[0];
+  const k=getKey();
+  $("#v-setup").innerHTML=`<div class="card tilt"><h2>Buat Ujian Baru</h2>
+  <label>Nama Peserta</label><input id="nm" value="${e(c.nama)}" placeholder="Nama Peserta" autocomplete="name">
+  <label>Jenjang</label><div class="chips">${chips(Object.keys(JENJANG),c.jenjang,"j")}</div>
+  <label>Kelas</label><select id="kl">${kelas.map(x=>`<option value="${x}" ${x===c.kelas?"selected":""}>Kelas ${x}</option>`).join("")}</select>
+  <label>Mata Pelajaran</label><select id="mp">${mp.map(x=>`<option ${x===c.mapel?"selected":""}>${e(x)}</option>`).join("")}<option value="__custom" ${c.mapel==="__custom"?"selected":""}>Lainnya / Custom</option></select>
+  ${c.mapel==="__custom"?`<input id="cm" style="margin-top:8px" value="${e(c.custom)}" placeholder="Ketik mata pelajaran">`:""}
+  <label>Semester</label><div class="seg">${[1,2].map(s=>`<button class="chip ${c.sem===s?"on":""}" data-s="${s}">Semester ${s}</button>`).join("")}</div>
+  <label>Jenis Ujian</label><div class="chips">${[["pg","PILIHAN GANDA","30 soal"],["es","URAIAN","10 soal"],["cu","CUSTOM","Atur sendiri"]].map(([v,t,u])=>`<button class="chip ${c.tipe===v?"on":""}" data-t="${v}" style="flex:1;min-width:100px;padding:14px 8px"><b>${t}</b><br><small>${u}</small></button>`).join("")}</div>
+  ${c.tipe==="cu"?`<div class="row"><div><label>Pilihan Ganda</label><input id="npg" type="number" min="0" max="${MAX_Q}" value="${c.nPG}"></div><div><label>Uraian</label><input id="nes" type="number" min="0" max="${MAX_Q}" value="${c.nEs}"></div></div><small>Maksimal ${MAX_Q} soal total.</small>`:""}
+  </div>
+  <div class="card"><h3>AI Configuration</h3><p>${k?"Gemini API Key: "+maskKey(k):"Gemini API Key belum dimasukkan."}</p><button class="btn g w" data-go="ai">Buka AI Configuration</button></div>
+  <button class="btn w" id="go" style="padding:16px">GENERATE UJIAN</button><div class="brand">deshbanaaa program</div>`;
+}
+function loadView(msg){
+  $("#v-load").innerHTML=`<div class="card center" style="margin-top:8vh"><div class="orbit"><i></i><i></i><div class="core"></div></div><h2>${e(msg||"AI sedang mempersiapkan ujianmu...")}</h2><p>AI sedang membuat soal...</p><div class="bar"><i id="lb"></i></div><button class="btn g" id="lc" style="margin-top:14px">Batalkan</button></div>`;
+  show("load");nav(false);let w=5;const iv=setInterval(()=>{const b=$("#lb");if(!b||curView!=="load")return clearInterval(iv);w=Math.min(92,w+Math.random()*4);b.style.width=w+"%";},700);
+}
+function failView(m){
+  $("#v-load").innerHTML=`<div class="card center" style="margin-top:8vh"><h2>Gagal membuat ujian</h2><p>${e(m)}</p><div class="row"><button class="btn" id="rt">Coba Lagi</button><button class="btn g" id="bk">Kembali ke Pengaturan</button></div></div>`;
+}
+function ringSVG(p){const r=70,C=2*Math.PI*r;return`<svg viewBox="0 0 170 170"><defs><linearGradient id="rg"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><circle cx="85" cy="85" r="${r}" fill="none" stroke="rgba(120,170,255,.15)" stroke-width="12"/><circle cx="85" cy="85" r="${r}" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-(p||0)/100)}"/></svg>`;}
+function openResult(r){
+  S.res=r;const sc=r.score;
+  $("#v-res").innerHTML=`<h2>HASIL UJIAN</h2>
+  <div class="card"><small>Nama: <b>${e(r.nama)}</b><br>Jenjang: ${e(r.jenjang)} • Kelas: ${r.kelas}<br>Mata Pelajaran: ${e(r.mapel)}<br>Semester: ${r.sem} • Jenis Ujian: ${e(r.jenis)}<br>${fmtD(r.date)}</small></div>
+  <div class="card scorebox tilt"><small>SKOR TOTAL</small><div class="ring">${ringSVG(sc)}<div>${sc===null?"-":Math.round(sc)}</div></div><h3 style="margin-top:12px">${sc===null?"":Math.round(sc)+" / 100 • "+status(sc)}</h3>${r.esNote?`<p>${e(r.esNote)}. Skor total hanya dari pilihan ganda.</p>`:""}</div>
+  <div class="stats"><div class="stat">Benar<b>${r.ok}</b></div><div class="stat">Salah<b>${r.bad}</b></div><div class="stat">Tidak dijawab<b>${r.skip}</b></div><div class="stat">Nilai Uraian<b>${r.esN?(r.esScore===null?"Belum dinilai":Math.round(r.esScore)):"-"}</b></div></div>
+  <h2 style="margin-top:18px">Review Jawaban</h2>
+  ${r.items.map((x,i)=>x.type==="mc"?`<div class="card rev ${x.st==="ok"?"ok":x.st==="no"?"no":""}"><b>Soal ${i+1}</b> <span class="badge ${x.st==="ok"?"ok":x.st==="no"?"no":"n"}">${x.st==="ok"?"Jawaban Benar":x.st==="no"?"Jawaban Salah":"Tidak dijawab"}</span><p style="color:var(--t)">${e(x.question)}</p>
+  <p>Jawaban kamu: <b style="color:var(--t)">${x.user===null?"-":L(x.user)+". "+e(x.options[x.user])}</b><br>Jawaban benar: <b style="color:var(--ok)">${L(x.correct)}. ${e(x.options[x.correct])}</b></p>${x.exp?`<p class="sm">Penjelasan: ${e(x.exp)}</p>`:""}</div>`
+  :`<div class="card rev"><b>Soal ${i+1} (Uraian)</b><p style="color:var(--t)">${e(x.question)}</p><p>Jawaban kamu: <span style="color:var(--t)">${e(x.user||"-")}</span></p><p>Jawaban acuan: <span style="color:var(--ok)">${e(x.ref||"-")}</span></p>
+  <p>Nilai AI: <b style="color:var(--t)">${x.score===null?"Jawaban uraian belum dapat dinilai":(Math.round(x.score*10)/10)+" / "+x.max}</b></p>${x.fb?`<p class="sm">Feedback AI: ${e(x.fb)}</p>`:""}${x.exp?`<p class="sm">Penjelasan: ${e(x.exp)}</p>`:""}</div>`).join("")}
+  <div class="row"><button class="btn" data-go="setup">Buat Ujian Lagi</button><button class="btn g" data-go="hist">Riwayat</button></div><div class="brand">deshbanaaa program</div>`;
+  show("res");nav(true,"hist");
+}
+
+// ======================
+// EVENTS
+// ======================
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("button,[data-h]");if(!t)return;const d=t.dataset;
+  if(d.go)return go(d.go);
+  if(d.h!==undefined)return openResult(getHist()[+d.h]);
+  const c=S.cfg;
+  if(d.j){c.jenjang=d.j;const m=$("#nm");if(m)c.nama=m.value;return renderSetup();}
+  if(d.k){c.kelas=+d.k.replace("Kelas ","");return renderSetup();}
+  if(d.s){c.sem=+d.s;return renderSetup();}
+  if(d.t){c.tipe=d.t;return renderSetup();}
+  if(d.o!==undefined){S.ans[S.cur]=+d.o;return renderExam();}
+  if(d.n!==undefined){saveEssay();S.cur=+d.n;return renderExam();}
+  switch(t.id){
+    case"btnLogin":return login();
+    case"ey":{const i=$("#ak");i.type=i.type==="password"?"text":"password";t.textContent=i.type==="password"?"Show":"Hide";return;}
+    case"tg":return $("#ac").classList.toggle("on");
+    case"sk":{const v=$("#ak").value.trim();if(!v)return toast("Tempel API Key terlebih dahulu.",1);if(v.length<20)return toast("API Key terlihat terlalu pendek.",1);S.key=v;if($("#sv").checked)ls.set(KEY_API,v);else ls.del(KEY_API);toast($("#sv").checked?"API Key tersimpan di perangkat ini.":"API Key dipakai sementara (tidak disimpan).");return renderAI();}
+    case"go":return startExam();
+    case"pv":saveEssay();S.cur--;return renderExam();
+    case"nx":saveEssay();S.cur++;return renderExam();
+    case"fin":return askFinish();
+    case"lc":S.cancel=true;return go("setup");
+    case"rt":return startExam();
+    case"bk":return go("setup");
+    case"hc":return clearHist();
+    case"pk":case"dk":return confirmBox("Hapus API Key?","Gemini API Key akan dihapus dari perangkat ini.","Hapus",()=>{ls.del(KEY_API);S.key="";toast("API Key dihapus.");curView==="ai"?renderAI():renderProf();});
+    case"lo":return logout();
+  }
+});
+document.addEventListener("input",ev=>{
+  const c=S.cfg,i=ev.target.id;
+  if(i==="nm")c.nama=ev.target.value;if(i==="cm")c.custom=ev.target.value;
+  if(i==="npg")c.nPG=ev.target.value;if(i==="nes")c.nEs=ev.target.value;
+});
+document.addEventListener("change",ev=>{if(ev.target.id==="kl")S.cfg.kelas=+ev.target.value;if(ev.target.id==="mp"){S.cfg.mapel=ev.target.value;renderSetup();}});
+// efek tilt kartu (nonaktif saat ujian berlangsung)
+document.addEventListener("pointermove",ev=>{
+  if(document.body.classList.contains("exam"))return;
+  const t=ev.target.closest(".tilt");document.querySelectorAll(".tilt").forEach(x=>{if(x!==t)x.style.transform="";});
+  if(!t)return;const r=t.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width-.5,y=(ev.clientY-r.top)/r.height-.5;
+  t.style.transform=`perspective(700px) rotateX(${-y*7}deg) rotateY(${x*9}deg) translateZ(6px)`;
+});
+document.addEventListener("pointerleave",()=>document.querySelectorAll(".tilt").forEach(x=>x.style.transform=""),true);
+window.addEventListener("offline",()=>toast("Periksa koneksi internet kamu.",1));
+window.addEventListener("beforeunload",ev=>{if(S.timer){ev.preventDefault();ev.returnValue="";}});
+
+// ======================
+// BACKGROUND (bintang bergerak)
+// ======================
+(function(){
+  const cv=$("#sky"),cx=cv.getContext("2d");let W,H,st=[];
+  const rs=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;st=Array.from({length:Math.min(90,W/6|0)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*1.6+.3}));};
+  rs();addEventListener("resize",rs);
+  const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  (function f(){cx.clearRect(0,0,W,H);const sp=document.body.classList.contains("exam")?.1:.35;
+    st.forEach(s=>{s.y+=s.z*sp;if(s.y>H){s.y=0;s.x=Math.random()*W;}cx.fillStyle=`rgba(${s.z>1.2?"140,210,255":"190,170,255"},${.3+s.z/3})`;cx.fillRect(s.x,s.y,s.z,s.z);});
+    if(!still)requestAnimationFrame(f);})();
+})();
+
+// ======================
+// START
+// ======================
+nav(false);
+setTimeout(initAuth,1400);
+</script>
+</body>
+</html>
